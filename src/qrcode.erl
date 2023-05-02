@@ -17,16 +17,19 @@
 -include("qrcode.hrl").
 -include("qrcode_params.hrl").
 
--export([encode/1, encode/2, decode/1]).
+-export([encode/1, encode/2, encode_png/2,
+         decode/1]).
 
-%%
+
+
 decode(_Bin) ->
-	{error, not_implemented}.
+	{error, nyi}.
 
-%%
+
 encode(Bin) ->
 	encode(Bin, 'M').
-%
+
+
 encode(Bin, ECC) when is_binary(Bin) ->
 	Params = choose_qr_params(Bin, ECC),
 	Content = encode_content(Params, Bin),
@@ -44,7 +47,45 @@ encode(Bin, ECC) when is_binary(Bin) ->
 	%% NOTE: Added "API" record
 	#qrcode{version = Version, ecc = ECC, dimension = Dim + ?QUIET_ZONE * 2, data = QRCode}.
 
-%%
+
+encode_png(Path, Bin) ->
+    #qrcode{dimension = Dim, data = Data} = encode(Bin),
+	MAGIC = <<137, 80, 78, 71, 13, 10, 26, 10>>,
+	Size = Dim * 8,
+	IHDR = png_chunk(<<"IHDR">>, <<Size:32, Size:32, 8:8, 2:8, 0:24>>),
+	PixelData = get_pixel_data(Dim, Data),
+	IDAT = png_chunk(<<"IDAT">>, PixelData),
+	IEND = png_chunk(<<"IEND">>, <<>>),
+	PNG = <<MAGIC/binary, IHDR/binary, IDAT/binary, IEND/binary>>,
+    file:write_file(Path, PNG).
+
+png_chunk(Type, Bin) ->
+	Length = byte_size(Bin),
+	CRC = erlang:crc32(<<Type/binary, Bin/binary>>),
+	<<Length:32, Type/binary, Bin/binary, CRC:32>>.
+
+get_pixel_data(Dim, Data) ->
+	Pixels = get_pixels(Data, 0, Dim, <<>>),
+	zlib:compress(Pixels).
+
+get_pixels(<<>>, Dim, Dim, Acc) ->
+	Acc;
+get_pixels(Bin, Count, Dim, Acc) ->
+	<<RowBits:Dim/bits, Bits/bits>> = Bin,
+	Row = get_pixels0(RowBits, <<0>>), % row filter byte
+	FullRow = binary:copy(Row, 8),
+	get_pixels(Bits, Count + 1, Dim, <<Acc/binary, FullRow/binary>>).
+
+get_pixels0(<<1:1, Bits/bits>>, Acc) ->
+	Black = binary:copy(<<0>>, 24),
+	get_pixels0(Bits, <<Acc/binary, Black/binary>>);
+get_pixels0(<<0:1, Bits/bits>>, Acc) ->
+	White = binary:copy(<<255>>, 24),
+	get_pixels0(Bits, <<Acc/binary, White/binary>>);
+get_pixels0(<<>>, Acc) ->
+	Acc.
+
+
 choose_qr_params(Bin, ECLevel) ->
 	Mode = choose_encoding(Bin),
 	{Mode, Version, ECCBlockDefs, Remainder} = choose_version(Mode, ECLevel, byte_size(Bin)),

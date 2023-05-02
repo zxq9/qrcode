@@ -1,0 +1,17 @@
+{a_email,"zxq9@zxq9.com"}.
+{author,"Craig Everett"}.
+{c_email,"steven.charles.davis@gmail.com"}.
+{copyright,"Steve Davis"}.
+{deps,[]}.
+{desc,"QR code generator in Erlang"}.
+{file_exts,[]}.
+{key_name,none}.
+{license,"Apache-2.0"}.
+{modules,[]}.
+{name,"QR Code"}.
+{package_id,{"otpr","qrcode",{0,1,0}}}.
+{prefix,none}.
+{repo_url,"https://github.com/zxq9/qrcode"}.
+{tags,[]}.
+{type,lib}.
+{ws_url,"https://github.com/komone/qrcode"}.
