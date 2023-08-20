@@ -12,6 +12,6 @@
 {package_id,{"otpr","qrcode",{0,1,0}}}.
 {prefix,none}.
 {repo_url,"https://github.com/zxq9/qrcode"}.
-{tags,[]}.
+{tags,["qr code","qr"]}.
 {type,lib}.
 {ws_url,"https://github.com/komone/qrcode"}.

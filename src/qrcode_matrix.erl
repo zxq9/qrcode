@@ -205,10 +205,10 @@ alignment_bits(AC) ->
 	Repeats = composite_ac(AC, []),
 	alignment_bits(Repeats, <<>>).
 alignment_bits([H|T], Acc) ->
-	Bits0 = bits:duplicate(<<31:5>>, H),
-	Bits1 = bits:duplicate(<<17:5>>, H),
-	Bits2 = bits:duplicate(<<21:5>>, H),
-	Bits = bits:append([Bits0, Bits1, Bits2, Bits1, Bits0]),
+	Bits0 = qrcode_bits:duplicate(<<31:5>>, H),
+	Bits1 = qrcode_bits:duplicate(<<17:5>>, H),
+	Bits2 = qrcode_bits:duplicate(<<21:5>>, H),
+	Bits = qrcode_bits:append([Bits0, Bits1, Bits2, Bits1, Bits0]),
 	alignment_bits(T, <<Acc/bits, Bits/bits>>);
 alignment_bits([], Acc) ->
 	Acc.
@@ -241,13 +241,13 @@ timing_bits(_, _, _, Acc) ->
 
 %%
 format_bits(Bin) ->
-	<<A:7, C:1, E:7>> = bits:reverse(Bin),
+	<<A:7, C:1, E:7>> = qrcode_bits:reverse(Bin),
 	<<B:8, D:7>> = Bin,
 	<<A:7, B:8, C:1, D:7, 1:1, E:7>>.
 
 %%
 version_bits(Bin) ->
-	VTop = bits:reverse(Bin),
+	VTop = qrcode_bits:reverse(Bin),
 	VLeft = version_bits(VTop, []),
 	<<VTop/bits, VLeft/bits>>.
 %
@@ -259,5 +259,5 @@ version_bits(<<>>, Acc) ->
 version_bits([<<A:1, B:1, C:1>>|T], RowA, RowB, RowC) ->
 	version_bits(T, <<RowA/bits, A:1>>, <<RowB/bits, B:1>>, <<RowC/bits, C:1>>);
 version_bits([], RowA, RowB, RowC) ->
-	bits:append([RowA, RowB, RowC]).
+	qrcode_bits:append([RowA, RowB, RowC]).
 
